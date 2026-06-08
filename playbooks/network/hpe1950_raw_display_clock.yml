@@ -1,0 +1,14 @@
+---
+- name: Teste SSH RAW HPE 1950
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Executar display clock via SSH raw
+      ansible.builtin.raw: display clock
+      register: resultado
+      changed_when: false
+
+    - name: Mostrar resultado
+      ansible.builtin.debug:
+        var: resultado.stdout_lines
