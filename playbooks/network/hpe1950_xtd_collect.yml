@@ -1,0 +1,71 @@
+---
+- name: Coletar informacoes HPE 1950 via xtd-cli-mode
+  hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Coletar versao e configuracao via Paramiko
+      ansible.builtin.shell: |
+        python3 - <<'PY'
+        import paramiko
+        import time
+
+        host = "{{ switch_ip }}"
+        username = "{{ switch_user }}"
+        password = "{{ switch_pass }}"
+        xtd_password = "{{ xtd_password }}"
+
+        def read_channel(chan, wait=1):
+            time.sleep(wait)
+            output = ""
+            while chan.recv_ready():
+                output += chan.recv(65535).decode(errors="ignore")
+                time.sleep(0.2)
+            return output
+
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+        client.connect(
+            hostname=host,
+            username=username,
+            password=password,
+            look_for_keys=False,
+            allow_agent=False,
+            timeout=20,
+            banner_timeout=30,
+            auth_timeout=30,
+        )
+
+        chan = client.invoke_shell()
+        output = read_channel(chan, 2)
+
+        chan.send("xtd-cli-mode\n")
+        output += read_channel(chan, 1)
+
+        chan.send("y\n")
+        output += read_channel(chan, 1)
+
+        chan.send(xtd_password + "\n")
+        output += read_channel(chan, 2)
+
+        chan.send("screen-length disable\n")
+        output += read_channel(chan, 1)
+
+        chan.send("display current-configuration\n")
+        output += read_channel(chan, 5)
+
+        chan.send("display version\n")
+        output += read_channel(chan, 5)
+
+        chan.send("quit\n")
+        client.close()
+
+        print(output)
+        PY
+      register: coleta
+      changed_when: false
+
+    - name: Mostrar saida coletada
+      ansible.builtin.debug:
+        var: coleta.stdout_lines
