@@ -4,6 +4,6 @@
   gather_facts: false
 
   tasks:
-    - name: Mensagem
-      debug:
-        msg: "AAP funcionando!"
+    - name: Validar execucao local
+      ansible.builtin.debug:
+        msg: "AAP funcionando corretamente!"
