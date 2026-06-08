@@ -1,0 +1,9 @@
+---
+- name: Teste local AAP
+  hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Mensagem
+      debug:
+        msg: "AAP funcionando!"
