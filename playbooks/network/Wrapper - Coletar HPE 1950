@@ -1,0 +1,31 @@
+---
+- name: Wrapper - Coletar HPE 1950
+  hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Validar variaveis obrigatorias
+      ansible.builtin.assert:
+        that:
+          - switch_ip is defined
+          - switch_user is defined
+          - switch_pass is defined
+          - xtd_password is defined
+        fail_msg: "Faltam variaveis obrigatorias: switch_ip, switch_user, switch_pass ou xtd_password"
+
+    - name: Coletar dados do HPE 1950
+      ansible.builtin.command:
+        argv:
+          - python3
+          - scripts/hpe1950_collect.py
+          - "{{ switch_ip }}"
+          - "{{ switch_user }}"
+          - "{{ switch_pass }}"
+          - "{{ xtd_password }}"
+      register: coleta
+      changed_when: false
+      no_log: true
+
+    - name: Mostrar resultado
+      ansible.builtin.debug:
+        var: coleta.stdout_lines
